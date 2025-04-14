@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { GOAL_OPTIONS, TIMELINE_OPTIONS, DAYS_PER_WEEK_OPTIONS, LONG_RUN_DAY_OPTIONS, INJURY_OPTIONS } from "../app/lib/constants";
 
@@ -11,6 +12,11 @@ const FITNESS_LEVEL_OPTIONS = [
   { value: "beginner", label: "Beginner (new to running)" },
   { value: "intermediate", label: "Intermediate (some running experience)" },
   { value: "advanced", label: "Advanced (regular runner with race experience)" }
+];
+
+const MILEAGE_GOAL_OPTIONS = [
+  { value: "maintain", label: "Maintain current mileage" },
+  { value: "increase", label: "Increase mileage" }
 ];
 
 interface PlanCreateFormProps {
@@ -36,7 +42,8 @@ export default function PlanCreateForm({ isLoading, error, onSubmit }: PlanCreat
   return (
     <Card className="bg-gray-800/80 backdrop-blur-sm border-gray-700/50 sticky top-20">
       <CardHeader className="border-b border-gray-700/50 pb-4">
-        <h2 className="text-lg font-medium text-white">Build your plan in 30 seconds!</h2>
+        <h2 className="text-lg font-medium text-white">Your AI Running Coach Is Ready</h2>
+        <p className="text-gray-300 text-sm mt-1">Tell us your goals and we'll create your personalized plan</p>
       </CardHeader>
       
       <CardContent className="pt-6">
@@ -82,6 +89,26 @@ export default function PlanCreateForm({ isLoading, error, onSubmit }: PlanCreat
                   />
                 </div>
                 
+                <div className="pt-1">
+                  <Label className="text-sm font-medium text-white block mb-2">
+                    Mileage Goal
+                  </Label>
+                  <RadioGroup defaultValue="increase" name="mileageGoal" className="space-y-2">
+                    {MILEAGE_GOAL_OPTIONS.map((option) => (
+                      <div key={option.value} className="flex items-center space-x-2">
+                        <RadioGroupItem 
+                          value={option.value} 
+                          id={option.value} 
+                          className="border-gray-500 text-teal-500"
+                        />
+                        <Label htmlFor={option.value} className="text-white text-sm font-normal">
+                          {option.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+                
                 <div>
                   <Label htmlFor="easyPace" className="text-sm font-medium text-white">
                     Recent Easy Pace (min:sec per mile)
@@ -106,49 +133,45 @@ export default function PlanCreateForm({ isLoading, error, onSubmit }: PlanCreat
                   </div>
                 </div>
                 
-                {fitnessLevel === "advanced" && (
-                  <>
-                    <div>
-                      <Label htmlFor="recentRaceDistance" className="text-sm font-medium text-white">
-                        Recent Race Distance
-                      </Label>
-                      <select 
-                        name="recentRaceDistance" 
-                        className="mt-1 w-full p-2 rounded bg-gray-900 text-white border border-gray-600 focus:border-teal-500"
-                      >
-                        <option value="">Select a distance (optional)</option>
-                        <option value="5k">5K</option>
-                        <option value="10k">10K</option>
-                        <option value="half_marathon">Half Marathon</option>
-                        <option value="marathon">Marathon</option>
-                      </select>
+                <div>
+                  <Label htmlFor="recentRunDistance" className="text-sm font-medium text-white">
+                    Recent Run Distance
+                  </Label>
+                  <select 
+                    name="recentRunDistance" 
+                    className="mt-1 w-full p-2 rounded bg-gray-900 text-white border border-gray-600 focus:border-teal-500"
+                  >
+                    <option value="">Select a distance (optional)</option>
+                    <option value="5k">5K</option>
+                    <option value="10k">10K</option>
+                    <option value="half_marathon">Half Marathon</option>
+                    <option value="marathon">Marathon</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="runTime" className="text-sm font-medium text-white">
+                  Recent Run Time (total completion time)
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input 
+                        name="runTimeMin" 
+                        type="number" 
+                        min="1"
+                        max="300" 
+                        placeholder="min" 
+                        className="mt-1 bg-gray-900 border-gray-600 text-white focus:border-teal-500 focus:ring-teal-500" 
+                    />
+                    <Input 
+                        name="runTimeSec" 
+                        type="number" 
+                        min="0"
+                        max="59" 
+                        placeholder="sec" 
+                        className="mt-1 bg-gray-900 border-gray-600 text-white focus:border-teal-500 focus:ring-teal-500" 
+                    />
                     </div>
-                    
-                    <div>
-                      <Label htmlFor="racePace" className="text-sm font-medium text-white">
-                        Recent Race Pace (min:sec per mile)
-                      </Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          name="racePaceMin" 
-                          type="number" 
-                          min="4"
-                          max="15" 
-                          placeholder="min" 
-                          className="mt-1 bg-gray-900 border-gray-600 text-white focus:border-teal-500 focus:ring-teal-500" 
-                        />
-                        <Input 
-                          name="racePaceSec" 
-                          type="number" 
-                          min="0"
-                          max="59" 
-                          placeholder="sec" 
-                          className="mt-1 bg-gray-900 border-gray-600 text-white focus:border-teal-500 focus:ring-teal-500" 
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
+                </div>
               </div>
             )}
 

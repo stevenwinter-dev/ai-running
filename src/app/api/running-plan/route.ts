@@ -4,17 +4,62 @@ import { NextResponse } from "next/server";
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: Request) {
-  const { currentWeeklyMileage, goal, daysPerWeek, timelineWeeks, longRunDay, injuries } = await req.json();
+  const { 
+    currentWeeklyMileage, 
+    fitnessLevel, 
+    mileageGoal, 
+    easyPaceMin,
+    easyPaceSec,
+    recentRunDistance,
+    runTimeMin,
+    runTimeSec,
+    goal, 
+    daysPerWeek, 
+    timelineWeeks, 
+    longRunDay, 
+    injuries 
+  } = await req.json();
+  
+  // Format paces and times if provided
+  const easyPaceFormatted = easyPaceMin && easyPaceSec 
+    ? `${easyPaceMin}:${easyPaceSec.toString().padStart(2, '0')}/mile` 
+    : null;
+    
+  const runTimeFormatted = runTimeMin && runTimeSec
+    ? `${runTimeMin}:${runTimeSec.toString().padStart(2, '0')}` 
+    : null;
 
   const prompt = `
-  As a professional running coach, create a personalized ${timelineWeeks}-week training plan for:
+  As a professional running coach, create a personalized ${timelineWeeks}-week training plan for a ${fitnessLevel || 'beginner'} runner with:
   - Current mileage: ${currentWeeklyMileage} mpw
   - Goal: ${goal}
   - ${daysPerWeek} running days/week
   - Long run day: ${longRunDay}
   - Injury considerations: ${injuries || 'none'}
+  ${fitnessLevel !== 'beginner' ? `- Mileage goal: ${mileageGoal || 'increase'}` : ''}
+  ${easyPaceFormatted ? `- Easy pace: ${easyPaceFormatted}` : ''}
+  ${recentRunDistance && runTimeFormatted ? `- Recent ${recentRunDistance} time: ${runTimeFormatted}` : ''}
 
   IMPORTANT: The plan MUST have EXACTLY ${daysPerWeek} running days per week, no more and no less. Count carefully to ensure there are exactly ${daysPerWeek} non-rest days in each week. The remaining days should be rest days.
+
+  MILEAGE PROGRESSION:
+  ${fitnessLevel !== 'beginner' && mileageGoal === 'maintain' 
+    ? '- Maintain the current weekly mileage with minimal fluctuations throughout the plan.' 
+    : '- Follow the "10% rule" for increasing weekly mileage - do not increase by more than 10% from week to week.'}
+  ${fitnessLevel === 'beginner' 
+    ? '- For beginners, start with a conservative mileage and focus on building consistency before volume.' 
+    : ''}
+  - Include a recovery week with reduced mileage approximately every 3-4 weeks.
+
+  WORKOUT TYPES:
+  ${fitnessLevel === 'beginner' 
+    ? '- Keep workouts simple with mostly easy runs and gradually build distance.' 
+    : fitnessLevel === 'intermediate'
+      ? '- Include a mix of easy runs, one long run per week, and introduce some basic speed work like strides and tempo runs.' 
+      : '- Include a balanced mix of easy runs, long runs, tempo runs, intervals, and recovery runs.'}
+  ${fitnessLevel === 'advanced' 
+    ? '- Add in specific workouts catered to the goal race distance if applicable.' 
+    : ''}
 
   Include:
   1. A brief description of the plan in a conversational tone, as if you are speaking directly to the runner. For example:
@@ -46,10 +91,15 @@ export async function POST(req: Request) {
           "week": 1,
           "mileage": "25", // Just the number, no "miles" text
           "workouts": {
-              "Monday": "5 miles easy run",
+              // NOTE: This is just a structural example. Create appropriate workouts 
+              // based on the runner's fitness level, goals, and other parameters.
+              // Include ALL days of the week with either workouts or rest days.
+              "Monday": "5 miles easy run", 
               "Tuesday": "Rest day",
               "Wednesday": "4 miles with strides",
               "Thursday": "3 miles recovery",
+              "Friday": "Rest day",
+              "Saturday": "5 miles easy run",
               "Sunday": "8 miles long run"
           },
           "notes": "Any special notes for the week"
@@ -57,6 +107,10 @@ export async function POST(req: Request) {
       ...
       ]
   }
+
+  IMPORTANT: Do NOT copy these exact example workouts. Create original workouts appropriate 
+  for this specific runner's parameters. Ensure variety in the types of workouts based on 
+  their fitness level (${fitnessLevel}), goal (${goal}), and other factors you've been given.
 
   Before submitting your response, check that:
   1. Each week has exactly ${daysPerWeek} running days
