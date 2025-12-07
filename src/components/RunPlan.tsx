@@ -8,8 +8,20 @@ interface RunPlanProps {
 }
 
 export default function RunPlan({ plan, formValues, onReset }: RunPlanProps) {
+  const apiLimitReached = process.env.NEXT_PUBLIC_API_LIMIT_REACHED === "TRUE";
+  
   return (
     <div className="space-y-6">
+      {apiLimitReached && (
+        <div className="p-4 mb-4 rounded-md bg-red-900/40 border border-red-500/40 text-center">
+          <h2 className="text-lg font-bold text-red-300 mb-2">
+            Our AI plan generator has reached its usage limit.
+          </h2>
+          <p className="text-sm text-red-200">
+            You’re seeing a sample running plan instead. For a personalized plan, please try again later!
+          </p>
+        </div>
+      )}
       {/* Create New Plan Button */}
       <div className="flex justify-end">
         <Button 

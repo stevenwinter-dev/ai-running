@@ -39,7 +39,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: Request) {
   // Check if API limit is reached
-  if (process.env.API_LIMIT_REACHED === "TRUE") {
+  if (process.env.NEXT_PUBLIC_API_LIMIT_REACHED === "TRUE") {
     return NextResponse.json({ plan: SAMPLE_DATA });
   }
 

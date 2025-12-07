@@ -54,12 +54,17 @@ export default function RunningPlanPage() {
       {/* App Header/Navigation */}
       <header className="sticky top-0 z-10 bg-black/40 backdrop-blur-sm border-b border-gray-700/50 px-4 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+          <button
+            className="flex items-center space-x-2 focus:outline-none"
+            onClick={() => window.location.reload()}
+            aria-label="Go to Home / Refresh"
+            style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
+          >
             <div className="w-8 h-8 rounded-full bg-gradient-to-r from-teal-500 to-cyan-400 flex items-center justify-center">
               <span className="text-white text-lg">🏃</span>
             </div>
             <h1 className="text-xl font-bold">Running Plan AI</h1>
-          </div>
+          </button>
         </div>
       </header>
 
