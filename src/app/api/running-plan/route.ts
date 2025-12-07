@@ -1,9 +1,48 @@
 import { Groq } from "groq-sdk";
 import { NextResponse } from "next/server";
 
+const SAMPLE_DATA = {
+  description: "This is a sample running plan.",
+  weeks: [
+    {
+      week: 1,
+      mileage: 20,
+      workouts: {
+        Monday: "Rest",
+        Tuesday: "3 miles easy",
+        Wednesday: "4 miles tempo",
+        Thursday: "Rest",
+        Friday: "3 miles easy",
+        Saturday: "5 miles long run",
+        Sunday: "Rest",
+      },
+      notes: "Focus on building consistency.",
+    },
+    {
+      week: 2,
+      mileage: 22,
+      workouts: {
+        Monday: "Rest",
+        Tuesday: "3 miles easy",
+        Wednesday: "5 miles tempo",
+        Thursday: "Rest",
+        Friday: "4 miles easy",
+        Saturday: "6 miles long run",
+        Sunday: "Rest",
+      },
+      notes: "Increase mileage gradually.",
+    },
+  ],
+};
+
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: Request) {
+  // Check if API limit is reached
+  if (process.env.API_LIMIT_REACHED === "TRUE") {
+    return NextResponse.json({ plan: SAMPLE_DATA });
+  }
+
   const { 
     currentWeeklyMileage, 
     fitnessLevel, 
