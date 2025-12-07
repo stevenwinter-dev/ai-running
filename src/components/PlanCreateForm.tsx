@@ -279,7 +279,7 @@ export default function PlanCreateForm({ isLoading, error, onSubmit }: PlanCreat
           type="submit"
           form="planForm"
           disabled={isLoading}
-          className={`w-full py-3 font-medium rounded-full transition-all duration-300 ${
+          className={`cursor-pointer w-full py-3 font-medium rounded-full transition-all duration-300 ${
             isLoading
               ? "bg-gray-600 cursor-not-allowed"
               : "bg-gradient-to-r from-teal-500 to-cyan-400 hover:from-teal-600 hover:to-cyan-500"

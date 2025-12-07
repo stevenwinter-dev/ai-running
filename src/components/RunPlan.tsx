@@ -15,7 +15,7 @@ export default function RunPlan({ plan, formValues, onReset }: RunPlanProps) {
         <Button 
           onClick={onReset} 
           variant="outline" 
-          className="bg-transparent border border-gray-600 text-white hover:bg-gray-700"
+          className="cursor-pointer bg-transparent border border-gray-600 text-white hover:bg-gray-700"
         >
           Create New Plan
         </Button>
