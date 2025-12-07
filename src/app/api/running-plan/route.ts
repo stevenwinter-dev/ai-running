@@ -4,65 +4,131 @@ import { NextResponse } from "next/server";
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: Request) {
-  const { currentWeeklyMileage, goal, daysPerWeek, timelineWeeks, longRunDay, injuries } = await req.json();
+  const { 
+    currentWeeklyMileage, 
+    fitnessLevel, 
+    mileageGoal, 
+    easyPaceMin,
+    easyPaceSec,
+    recentRunDistance,
+    runTimeMin,
+    runTimeSec,
+    goal, 
+    daysPerWeek, 
+    timelineWeeks, 
+    longRunDay, 
+    injuries 
+  } = await req.json();
+  
+  // Format paces and times if provided
+  const easyPaceFormatted = easyPaceMin && easyPaceSec 
+    ? `${easyPaceMin}:${easyPaceSec.toString().padStart(2, '0')}/mile` 
+    : null;
+    
+  const runTimeFormatted = runTimeMin && runTimeSec
+    ? `${runTimeMin}:${runTimeSec.toString().padStart(2, '0')}` 
+    : null;
 
   const prompt = `
-  As a professional running coach, create a personalized ${timelineWeeks}-week training plan for:
-  - Current mileage: ${currentWeeklyMileage} mpw
+  # RUNNING PLAN CREATION TASK
+
+  You are a professional running coach. Create a personalized training plan tailored to the runner's specific needs, experience level, and goals. Use a motivating and supportive tone to inspire the runner while providing expert guidance.
+
+  ## RUNNER PROFILE
+  - Fitness Level: ${fitnessLevel || 'beginner'}
+  - Current Weekly Mileage: ${currentWeeklyMileage} miles
   - Goal: ${goal}
-  - ${daysPerWeek} running days/week
-  - Long run day: ${longRunDay}
-  - Injury considerations: ${injuries || 'none'}
+  - Running Days Per Week: ${daysPerWeek}
+  - Long Run Day: ${longRunDay}
+  - Injury Considerations: ${injuries || 'none'}
+  ${fitnessLevel !== 'beginner' ? `- Mileage Goal: ${mileageGoal || 'increase'}` : ''}
+  ${easyPaceFormatted ? `- Easy Pace: ${easyPaceFormatted}` : ''}
+  ${recentRunDistance && runTimeFormatted ? `- Recent ${recentRunDistance} Time: ${runTimeFormatted}` : ''}
 
-  Include:
-  1. A brief description of the plan in a conversational tone, as if you are speaking directly to the runner. For example:
-      - If the runner has a high weekly mileage (e.g., 40+ miles), acknowledge their experience and suggest how the plan will help them improve further.
-      - If the runner has a low weekly mileage (e.g., 10-20 miles), encourage them and explain how the plan will help them build a strong foundation.
-      - Tailor the description to the number of running days per week. For example, if they run 6 days a week, acknowledge their dedication and suggest how the plan will balance intensity and recovery.
-      - Avoid simply repeating the input values; instead, provide meaningful and motivational feedback.
-  2. A table with weekly details, including:
-      - Week number
-      - Weekly mileage target
-      - Key workouts for each day of the week (Monday through Sunday). If there is no workout for a specific day, include an empty string for that day.
-      - Notes (e.g., taper weeks or injury considerations)
+  ## KEY REQUIREMENTS
+  1. Create a ${timelineWeeks}-week personalized running plan.
+  2. EXACTLY ${daysPerWeek} running days per week (no more, no less).
+  3. The long run MUST always be scheduled on ${longRunDay}.
+  4. For mileage progression:
+    - Start with ${currentWeeklyMileage} miles in Week 1.
+    - Gradually increase weekly mileage by no more than 10% per week.
+    - Include a recovery week (reduced mileage) every 3-4 weeks.
+  5. For workout types:
+    - Include a mix of easy runs, long runs, tempo runs, intervals, strides, and recovery runs.
+    - Every run MUST include a description (e.g., "5 miles easy run" or "6 miles tempo").
+    - Ensure the long run is appropriately scaled to the runner's experience and weekly mileage.
 
-  Guidelines for distributing workouts and rest days:
-  - Rest days should follow the highest-intensity workouts (e.g., speed workouts, long runs).
-  - Avoid consecutive rest days unless absolutely necessary.
-  - Spread the running days evenly throughout the week to maintain consistency.
-  - Ensure that the long run day (${longRunDay}) is always included as one of the running days.
+  ## REST DAY PLACEMENT - CRITICAL
+  1. Rest days MUST be spaced logically throughout the week:
+    - Include a rest day **before** and **after** the long run to allow for recovery.
+    - Avoid scheduling runs immediately after the long run.
+    - Distribute the remaining rest days evenly across the week to balance effort and recovery.
+  2. Example for 3 running days per week with a Sunday long run:
+    - Monday: Rest day
+    - Tuesday: 3 miles easy run
+    - Wednesday: Rest day
+    - Thursday: 3 miles tempo run
+    - Friday: Rest day
+    - Saturday: Rest day
+    - Sunday: 4 miles long run
 
-  Format the response as a JSON object with the following structure:
+  ## MILEAGE CALCULATION - CRITICAL
+  1. The sum of daily workout mileage MUST EQUAL the weekly mileage total.
+  2. Distribute the weekly mileage across exactly ${daysPerWeek} running days.
+  3. VERIFY: If the weekly mileage is 10 miles and the user runs 3 days per week:
+    - Example:
+      - Tuesday: 3 miles easy run
+      - Thursday: 3 miles tempo run
+      - Sunday: 4 miles long run
+      - Total: 3 + 3 + 4 = 10 miles ✓
+
+  ## CONTINUITY REQUIREMENTS
+  - Ensure a logical progression between weeks that builds toward the final week.
+  - Gradually increase workout intensity and complexity as the plan progresses.
+  - Maintain consistent workout patterns (e.g., long runs on the same day each week) while varying specific workouts.
+  - Each week should prepare the runner for the following week's challenges.
+
+  ## OUTPUT FORMAT
+  Return a JSON object with the following structure:
   {
-      "description": "A brief overview of the plan",
-      "weeks": [
+    "description": "A motivational overview of the plan tailored to the runner.",
+    "weeks": [
       {
-          "week": 1,
-          "mileage": "X miles",
-          "workouts": {
-              "Monday": "Speed workout",
-              "Tuesday": "Tempo run",
-              "Wednesday": "Long run",
-              "Thursday": "",
-              "Friday": "",
-              "Saturday": "",
-              "Sunday": ""
-          },
-          "notes": "Any special notes for the week"
-      },
-      ...
-      ]
+        "week": 1,
+        "mileage": "10",
+        "workouts": {
+          "Monday": "Rest day",
+          "Tuesday": "3 miles easy run",
+          "Wednesday": "Rest day",
+          "Thursday": "3 miles easy run with strides",
+          "Friday": "Rest day",
+          "Saturday": "Rest day",
+          "Sunday": "4 miles long run"
+        },
+        "notes": "Focus on building a consistent running habit this week."
+      }
+    ]
   }
 
-  **Return only the raw JSON without markdown formatting or additional text.**
+  ## IMPORTANT CHECKS
+  - Each week MUST have EXACTLY ${daysPerWeek} running days.
+  - The sum of daily workout mileage MUST equal the weekly mileage total.
+  - The long run MUST always be scheduled on ${longRunDay}.
+  - Rest days MUST follow the rules outlined in the "REST DAY PLACEMENT" section.
+  - Every running workout MUST include a description (e.g., "easy run", "tempo run").
+  - Include all seven days of the week in the output (with rest days explicitly labeled).
+  - Use original workouts tailored to the runner’s profile—do NOT copy the example workouts verbatim.
+  - Mileage values should be numbers only (e.g., "5", not "5 miles").
+
+  Return only the raw JSON without markdown formatting or additional text.
 `;
 
   try {
     const response = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "llama3-70b-8192",
-      temperature: 0.6,
-      response_format: { type: "json_object" }, // Force JSON output
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.5,
+      response_format: { type: "json_object" }
     });
 
     const content = response.choices[0]?.message?.content;
